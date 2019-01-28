@@ -28,6 +28,10 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Random;
 
+// copied from cordova-plugin-idfa
+import android.content.Context;
+import com.google.android.gms.ads.identifier.AdvertisingIdClient;
+
 /**
  * This class represents the native implementation for the AdMob Cordova plugin.
  * This plugin can be used to request AdMob ads natively via the Google AdMob SDK.
@@ -176,7 +180,7 @@ public class AdMob extends CordovaPlugin {
         return null;
     }
 
-    private void setOptions( JSONObject options ) {
+    private void setOptions( JSONObject options, CallbackContext callbackContext ) throws Exception {
         if(options == null) return;
 
         if(options.has(OPT_PUBLISHER_ID)) this.publisherId = options.optString( OPT_PUBLISHER_ID );
@@ -188,6 +192,15 @@ public class AdMob extends CordovaPlugin {
         if(options.has(OPT_IS_TESTING)) this.isTesting  = options.optBoolean( OPT_IS_TESTING );
         if(options.has(OPT_AD_EXTRAS)) this.adExtras  = options.optJSONObject( OPT_AD_EXTRAS );
         if(options.has(OPT_AUTO_SHOW)) this.autoShow  = options.optBoolean( OPT_AUTO_SHOW );
+		
+		// copied from cordova-plugin-idfa
+		Context context = this.cordova.getActivity().getApplicationContext();
+        AdvertisingIdClient.Info info = AdvertisingIdClient.getAdvertisingIdInfo(context);
+
+        JSONObject result = new JSONObject();
+        result.put("aaid", info.getId());
+        result.put("limitAdTracking", info.isLimitAdTrackingEnabled());
+        callbackContext.success(result);
     }
 
     /**
