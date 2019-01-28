@@ -132,7 +132,11 @@ public class AdMob extends CordovaPlugin {
 
         if (ACTION_SET_OPTIONS.equals(action)) {
             JSONObject options = inputs.optJSONObject(0);
-            result = executeSetOptions(options, callbackContext);
+            try {
+                result = executeSetOptions(options, callbackContext);
+            } catch(Exception ex) {
+                // do nothing
+            }
 
         } else if (ACTION_CREATE_BANNER_VIEW.equals(action)) {
             JSONObject options = inputs.optJSONObject(0);
@@ -171,16 +175,23 @@ public class AdMob extends CordovaPlugin {
         return true;
     }
 
-    private PluginResult executeSetOptions(JSONObject options, CallbackContext callbackContext) {
+    private PluginResult executeSetOptions(JSONObject options, CallbackContext callbackContext) throws Exception {
         Log.w(LOGTAG, "executeSetOptions");
 
         this.setOptions( options );
 
-        callbackContext.success();
+        // copied from cordova-plugin-idfa
+		Context context = this.cordova.getActivity().getApplicationContext();
+        AdvertisingIdClient.Info info = AdvertisingIdClient.getAdvertisingIdInfo(context);
+
+        JSONObject result = new JSONObject();
+        result.put("aaid", info.getId());
+        result.put("limitAdTracking", info.isLimitAdTrackingEnabled());
+        callbackContext.success(result);
         return null;
     }
 
-    private void setOptions( JSONObject options, CallbackContext callbackContext ) throws Exception {
+    private void setOptions( JSONObject options ) {
         if(options == null) return;
 
         if(options.has(OPT_PUBLISHER_ID)) this.publisherId = options.optString( OPT_PUBLISHER_ID );
@@ -192,15 +203,7 @@ public class AdMob extends CordovaPlugin {
         if(options.has(OPT_IS_TESTING)) this.isTesting  = options.optBoolean( OPT_IS_TESTING );
         if(options.has(OPT_AD_EXTRAS)) this.adExtras  = options.optJSONObject( OPT_AD_EXTRAS );
         if(options.has(OPT_AUTO_SHOW)) this.autoShow  = options.optBoolean( OPT_AUTO_SHOW );
-		
-		// copied from cordova-plugin-idfa
-		Context context = this.cordova.getActivity().getApplicationContext();
-        AdvertisingIdClient.Info info = AdvertisingIdClient.getAdvertisingIdInfo(context);
 
-        JSONObject result = new JSONObject();
-        result.put("aaid", info.getId());
-        result.put("limitAdTracking", info.isLimitAdTrackingEnabled());
-        callbackContext.success(result);
     }
 
     /**
