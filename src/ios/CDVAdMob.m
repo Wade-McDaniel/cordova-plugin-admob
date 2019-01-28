@@ -6,6 +6,8 @@
 
 #import "MainViewController.h"
 
+#import <AdSupport/ASIdentifierManager.h>
+
 
 
 @interface CDVAdMob()
@@ -171,17 +173,11 @@ object:nil];
 
     NSLog(@"setOptions");
 
-    
-
-    CDVPluginResult *pluginResult;
-
     NSString *callbackId = command.callbackId;
 
     NSArray* args = command.arguments;
 
-    
-
-NSUInteger argc = [args count];
+    NSUInteger argc = [args count];
 
     if( argc >= 1 ) {
 
@@ -194,7 +190,13 @@ NSUInteger argc = [args count];
 
     
 
-    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    NSString *idfaString = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
+    BOOL enabled = [[ASIdentifierManager sharedManager] isAdvertisingTrackingEnabled];
+
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{
+        @"idfa": idfaString,
+        @"limitAdTracking": [NSNumber numberWithBool:!enabled]
+    }];
 
     [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
 
